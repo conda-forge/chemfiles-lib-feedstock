@@ -11,21 +11,16 @@ source:
   sha256: {{ sha256 }}
 
 build:
-  skip: true  # [win]
+  skip: true  # [win and py<3.5]
   number: 0
-  script:
-    - cmake -DBUILD_SHARED_LIBS=ON -DCMAKE_INSTALL_PREFIX=$PREFIX .
-    - cmake --build . --config release --target install
-    # run the tests
-    - cp $RECIPE_DIR/27d89caa55e1f42cdbbed5a322b51c702066d871.tar.gz tests/
-    - cmake -DCHFL_BUILD_TESTS=ON .
-    - cmake --build . --config release
-    - ctest --output-on-failure
 
 requirements:
   build:
     - cmake
     - toolchain
+    # We need to depend on Python to be sure to have MSVC 14 available for the
+    # build: https://github.com/conda/conda/wiki/VC-features
+    - python  # [win]
 
 test:
   commands:
