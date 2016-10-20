@@ -11,6 +11,8 @@ source:
   sha256: {{ sha256 }}
 
 build:
+  features:  # [win]
+    - vc14   # [win]
   number: 0
   script:
     - cmake -DBUILD_SHARED_LIBS=OFF -DCMAKE_INSTALL_PREFIX=$PREFIX -DENABLE_NETCDF=ON .
