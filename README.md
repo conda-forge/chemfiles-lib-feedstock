@@ -1,7 +1,7 @@
 About chemfiles-lib
 ===================
 
-Home: http://chemfiles.github.io
+Home: https://chemfiles.github.io
 
 Package license: MPL-v2.0
 
