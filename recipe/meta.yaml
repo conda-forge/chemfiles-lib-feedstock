@@ -1,5 +1,5 @@
-{% set version = "0.6.2" %}
-{% set sha256 = "7dc508282e429f2b1efa38287d1f420f64c34fd4e40a57b7d6e2bc6964379d6e" %}
+{% set version = "0.7.1" %}
+{% set sha256 = "2bc739046d952aa60882c1418388127c424be2f149829598d6ac851c0b043081" %}
 
 package:
   name: chemfiles-lib
@@ -14,13 +14,13 @@ build:
   skip: true  # [win]
   number: 0
   script:
-    - cmake -DBUILD_SHARED_LIBS=OFF -DCMAKE_INSTALL_PREFIX=$PREFIX -DENABLE_NETCDF=ON .
+    - cmake -DBUILD_SHARED_LIBS=OFF -DCMAKE_INSTALL_PREFIX=$PREFIX -DCHFL_ENABLE_NETCDF=ON .
     - cmake --build . --config release --target install
     - cmake -DBUILD_SHARED_LIBS=ON .
     - cmake --build . --config release --target install
     # run the tests
-    - cmake -DSRC_DIR=$SRC_DIR -P $RECIPE_DIR/get-tests-data.cmake
-    - cmake -DBUILD_TESTS=ON .
+    - cp $RECIPE_DIR/27d89caa55e1f42cdbbed5a322b51c702066d871.tar.gz tests/
+    - cmake -DCHFL_BUILD_TESTS=ON .
     - cmake --build . --config release
     - ctest --output-on-failure
 
@@ -37,11 +37,11 @@ test:
     - true  # this was already done during the build
 
 about:
-  home: http://chemfiles.github.io
+  home: https://chemfiles.github.io
   license: MPL-v2.0
   license_file: LICENCE.txt
   summary: Modern library for chemistry file reading and writing
-  doc_url: http://chemfiles.github.io/chemfiles/latest/
+  doc_url: https://chemfiles.github.io/chemfiles/latest/
   dev_url: https://github.com/chemfiles/chemfiles
 
 extra:
