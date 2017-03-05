@@ -1,5 +1,5 @@
-{% set version = "0.7.1" %}
-{% set sha256 = "2bc739046d952aa60882c1418388127c424be2f149829598d6ac851c0b043081" %}
+{% set version = "0.7.2" %}
+{% set sha256 = "fb30d5a271e43c0e1e94c3ccbb06dd61b029574e93fa05e113e5c75372b5985e" %}
 
 package:
   name: chemfiles-lib
@@ -14,9 +14,7 @@ build:
   skip: true  # [win]
   number: 0
   script:
-    - cmake -DBUILD_SHARED_LIBS=OFF -DCMAKE_INSTALL_PREFIX=$PREFIX -DCHFL_ENABLE_NETCDF=ON .
-    - cmake --build . --config release --target install
-    - cmake -DBUILD_SHARED_LIBS=ON .
+    - cmake -DBUILD_SHARED_LIBS=ON -DCMAKE_INSTALL_PREFIX=$PREFIX -DCHFL_ENABLE_NETCDF=ON .
     - cmake --build . --config release --target install
     # run the tests
     - cp $RECIPE_DIR/27d89caa55e1f42cdbbed5a322b51c702066d871.tar.gz tests/
