@@ -1,5 +1,5 @@
-{% set version = "0.7.3" %}
-{% set sha256 = "62c34d1f4b367dc9395b42fa35cd487eda2255437e01ace7a45d556b5522be76" %}
+{% set version = "0.7.4" %}
+{% set sha256 = "5d84192274b1beb42f590baa723b5cca8afc8a7572be5e6bd978edc8bcf7c9b8" %}
 
 package:
   name: chemfiles-lib
@@ -7,23 +7,20 @@ package:
 
 source:
   fn: chemfiles-{{ version }}.tar.gz
-  url: https://github.com/chemfiles/chemfiles/archive/{{ version }}.tar.gz
+  url: https://github.com/chemfiles/chemfiles/archive/{{ version }}-rc2.tar.gz
   sha256: {{ sha256 }}
 
 build:
   skip: true  # [win and py<3.5]
-  number: 1
+  number: 0
 
 requirements:
   build:
     - cmake
-    - libnetcdf 4.4.*
     - toolchain
     # We need to depend on Python to be sure to have MSVC 14 available for the
     # build: https://github.com/conda/conda/wiki/VC-features
     - python  # [win]
-  run:
-    - libnetcdf 4.4.*
 
 test:
   commands:

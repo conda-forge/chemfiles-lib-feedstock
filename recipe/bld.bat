@@ -1,4 +1,4 @@
-cmake -DBUILD_SHARED_LIBS=ON -DCMAKE_INSTALL_PREFIX=%PREFIX% -DCHFL_ENABLE_NETCDF=ON .
+cmake -DBUILD_SHARED_LIBS=ON -DCMAKE_INSTALL_PREFIX=%PREFIX% .
 cmake --build . --config release --target install
 
 :: Build and run the tests
