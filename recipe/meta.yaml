@@ -1,5 +1,5 @@
-{% set version = "0.7.3" %}
-{% set sha256 = "62c34d1f4b367dc9395b42fa35cd487eda2255437e01ace7a45d556b5522be76" %}
+{% set version = "0.7.4" %}
+{% set sha256 = "4c76aa98d60f955285c0cf4f4104e40a50349b10675a090bfaa4b1e908394f0a" %}
 
 package:
   name: chemfiles-lib
@@ -14,7 +14,7 @@ build:
   skip: true  # [win]
   number: 0
   script:
-    - cmake -DBUILD_SHARED_LIBS=ON -DCMAKE_INSTALL_PREFIX=$PREFIX -DCHFL_ENABLE_NETCDF=ON .
+    - cmake -DBUILD_SHARED_LIBS=ON -DCMAKE_INSTALL_PREFIX=$PREFIX .
     - cmake --build . --config release --target install
     # run the tests
     - cp $RECIPE_DIR/27d89caa55e1f42cdbbed5a322b51c702066d871.tar.gz tests/
@@ -25,21 +25,18 @@ build:
 requirements:
   build:
     - cmake
-    - libnetcdf 4.4.*
     - toolchain
-  run:
-    - libnetcdf 4.4.*
 
 test:
   commands:
     - true  # this was already done during the build
 
 about:
-  home: https://chemfiles.github.io
+  home: https://chemfiles.org
   license: MPL-v2.0
   license_file: LICENCE.txt
   summary: Modern library for chemistry file reading and writing
-  doc_url: https://chemfiles.github.io/chemfiles/latest/
+  doc_url: https://chemfiles.org/chemfiles/0.7.4/
   dev_url: https://github.com/chemfiles/chemfiles
 
 extra:
