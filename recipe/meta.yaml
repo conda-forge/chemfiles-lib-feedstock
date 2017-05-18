@@ -11,16 +11,17 @@ source:
   sha256: {{ sha256 }}
 
 build:
-  skip: true  # [win and py<3.5]
+  skip: true  # [win and py2k]
   number: 0
+  features:
+    - vc14  # [win]
 
 requirements:
   build:
     - cmake
     - toolchain
-    # We need to depend on Python to be sure to have MSVC 14 available for the
-    # build: https://github.com/conda/conda/wiki/VC-features
-    - python  # [win]
+  run:
+    - vc 14  # [win]
 
 test:
   commands:
