@@ -12,7 +12,8 @@ source:
 
 build:
   skip: true  # [win and py2k]
-  number: 0
+  number: 1
+  include_recipe: False
   features:
     - vc14  # [win]
 
