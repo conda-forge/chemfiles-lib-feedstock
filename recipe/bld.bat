@@ -1,4 +1,4 @@
-cmake -G "%CMAKE_GENERATOR%" -DBUILD_SHARED_LIBS=ON -DCMAKE_INSTALL_PREFIX=%PREFIX% .
+cmake -G "%CMAKE_GENERATOR%" -DBUILD_SHARED_LIBS=ON -DCMAKE_INSTALL_PREFIX=%PREFIX%/Library .
 cmake --build . --config release --target install
 
 :: Build and run the tests
