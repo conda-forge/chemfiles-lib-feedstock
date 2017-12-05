@@ -1,5 +1,5 @@
-{% set version = "0.7.4" %}
-{% set sha256 = "4c76aa98d60f955285c0cf4f4104e40a50349b10675a090bfaa4b1e908394f0a" %}
+{% set version = "0.8.0" %}
+{% set sha256 = "7a3b7b225e4439dc3026b25366d04f241e5510b6da415adaafcfa24f517794c7" %}
 
 package:
   name: chemfiles-lib
@@ -30,10 +30,10 @@ test:
 
 about:
   home: https://chemfiles.org
-  license: MPL-v2.0
-  license_file: LICENCE.txt
+  license: BSD
+  license_file: LICENSE
   summary: Modern library for chemistry file reading and writing
-  doc_url: https://chemfiles.org/chemfiles/0.7.4/
+  doc_url: https://chemfiles.org/chemfiles/0.8.0/
   dev_url: https://github.com/chemfiles/chemfiles
 
 extra:
