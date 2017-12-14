@@ -21,6 +21,8 @@ requirements:
   build:
     - cmake
     - toolchain
+    # This is needed to make sure the windows builder is setup correctly
+    - python  # [win]
   run:
     - vc 14  # [win]
 
