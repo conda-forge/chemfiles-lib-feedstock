@@ -32,7 +32,7 @@ test:
 
 about:
   home: https://chemfiles.org
-  license: BSD
+  license: BSD-3-Clause
   license_file: LICENSE
   summary: Modern library for chemistry file reading and writing
   doc_url: https://chemfiles.org/chemfiles/0.8.0/
