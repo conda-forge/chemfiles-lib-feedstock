@@ -3,7 +3,7 @@ About chemfiles-lib
 
 Home: https://chemfiles.org
 
-Package license: BSD
+Package license: BSD-3-Clause
 
 Feedstock license: BSD 3-Clause
 
@@ -14,14 +14,16 @@ Summary: Modern library for chemistry file reading and writing
 Current build status
 ====================
 
-Linux: [![Circle CI](https://circleci.com/gh/conda-forge/chemfiles-lib-feedstock.svg?style=shield)](https://circleci.com/gh/conda-forge/chemfiles-lib-feedstock)
-OSX: [![TravisCI](https://travis-ci.org/conda-forge/chemfiles-lib-feedstock.svg?branch=master)](https://travis-ci.org/conda-forge/chemfiles-lib-feedstock)
-Windows: [![AppVeyor](https://ci.appveyor.com/api/projects/status/github/conda-forge/chemfiles-lib-feedstock?svg=True)](https://ci.appveyor.com/project/conda-forge/chemfiles-lib-feedstock/branch/master)
+[![Linux](https://img.shields.io/circleci/project/github/conda-forge/chemfiles-lib-feedstock/master.svg?label=Linux)](https://circleci.com/gh/conda-forge/chemfiles-lib-feedstock)
+[![OSX](https://img.shields.io/travis/conda-forge/chemfiles-lib-feedstock/master.svg?label=macOS)](https://travis-ci.org/conda-forge/chemfiles-lib-feedstock)
+[![Windows](https://img.shields.io/appveyor/ci/conda-forge/chemfiles-lib-feedstock/master.svg?label=Windows)](https://ci.appveyor.com/project/conda-forge/chemfiles-lib-feedstock/branch/master)
 
 Current release info
 ====================
-Version: [![Anaconda-Server Badge](https://anaconda.org/conda-forge/chemfiles-lib/badges/version.svg)](https://anaconda.org/conda-forge/chemfiles-lib)
-Downloads: [![Anaconda-Server Badge](https://anaconda.org/conda-forge/chemfiles-lib/badges/downloads.svg)](https://anaconda.org/conda-forge/chemfiles-lib)
+
+| Name | Downloads | Version | Platforms |
+| --- | --- | --- | --- |
+| [![Conda Recipe](https://img.shields.io/badge/recipe-chemfiles--lib-green.svg)](https://anaconda.org/conda-forge/chemfiles-lib) | [![Conda Downloads](https://img.shields.io/conda/dn/conda-forge/chemfiles-lib.svg)](https://anaconda.org/conda-forge/chemfiles-lib) | [![Conda Version](https://img.shields.io/conda/vn/conda-forge/chemfiles-lib.svg)](https://anaconda.org/conda-forge/chemfiles-lib) | [![Conda Platforms](https://img.shields.io/conda/pn/conda-forge/chemfiles-lib.svg)](https://anaconda.org/conda-forge/chemfiles-lib) |
 
 Installing chemfiles-lib
 ========================
