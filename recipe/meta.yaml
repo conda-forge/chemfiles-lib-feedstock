@@ -11,20 +11,15 @@ source:
   sha256: {{ sha256 }}
 
 build:
-  skip: true  # [win and py2k]
+  skip: true  # [win and vc<14]
   number: 1
   include_recipe: False
-  features:
-    - vc14  # [win]
 
 requirements:
   build:
     - cmake
-    - toolchain
-    # This is needed to make sure the windows builder is setup correctly
-    - python  # [win]
-  run:
-    - vc 14  # [win]
+    - {{ compiler('c') }}
+    - {{ compiler('cxx') }}
 
 test:
   commands:
