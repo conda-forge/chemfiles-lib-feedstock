@@ -1,19 +1,26 @@
+# Chemfiles version and SHA256
 {% set version = "0.8.0" %}
 {% set sha256 = "7a3b7b225e4439dc3026b25366d04f241e5510b6da415adaafcfa24f517794c7" %}
+
+# Chemfiles test data git version and SHA256
+{% set data_git = "c26f254cd7bff7e476bf065403fbd0a6a47fea38" %}
+{% set data_sha256 = "ba3feedbdd1e33dc690907988cb69595eb638566e12da353e07c46ebe73cfceb" %}
 
 package:
   name: chemfiles-lib
   version: {{ version }}
 
 source:
-  fn: chemfiles-{{ version }}.tar.gz
-  url: https://github.com/chemfiles/chemfiles/archive/{{ version }}.tar.gz
-  sha256: {{ sha256 }}
+  - fn: chemfiles-{{ version }}.tar.gz
+    url: https://github.com/chemfiles/chemfiles/archive/{{ version }}.tar.gz
+    sha256: {{ sha256 }}
+  - url: https://github.com/chemfiles/tests-data/archive/{{ data_git }}.tar.gz
+    sha256: {{ data_sha256 }}
+    folder: tests/data
 
 build:
   skip: true  # [win and vc<14]
-  number: 1
-  include_recipe: False
+  number: 2
 
 requirements:
   build:
