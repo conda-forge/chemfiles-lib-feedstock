@@ -30,7 +30,7 @@ requirements:
 
 test:
   commands:
-    - true  # this was already done during the build
+    - "true"  # this was already done during the build
 
 about:
   home: https://chemfiles.org
