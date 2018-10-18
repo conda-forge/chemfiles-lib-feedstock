@@ -1,0 +1,18 @@
+diff --git a/cmake/CompilerFlags.cmake b/cmake/CompilerFlags.cmake
+index 78efd2b..6afa7ea 100644
+--- a/cmake/CompilerFlags.cmake
++++ b/cmake/CompilerFlags.cmake
+@@ -32,8 +32,12 @@ if(COMPILER_SUPPORTS_C99)
+     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -std=c99")
+ endif()
+ 
+-if(COMPILER_HAS_HIDDEN_VISIBILITY)
++CHECK_CXX_COMPILER_FLAG("-fvisibility=hidden" CXX_COMPILER_SUPPORTS_HIDDEN_VISIBILITY)
++CHECK_C_COMPILER_FLAG("-fvisibility=hidden" C_COMPILER_SUPPORTS_HIDDEN_VISIBILITY)
++if(${CXX_COMPILER_SUPPORTS_HIDDEN_VISIBILITY})
+     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fvisibility=hidden")
++endif()
++if(${C_COMPILER_SUPPORTS_HIDDEN_VISIBILITY})
+     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fvisibility=hidden")
+ endif()
+ 
