@@ -14,6 +14,8 @@ source:
   - fn: chemfiles-{{ version }}.tar.gz
     url: https://github.com/chemfiles/chemfiles/archive/{{ version }}.tar.gz
     sha256: {{ sha256 }}
+    patches:
+      - visibility-hidden.patch
   - url: https://github.com/chemfiles/tests-data/archive/{{ data_git }}.tar.gz
     sha256: {{ data_sha256 }}
     folder: tests/data
