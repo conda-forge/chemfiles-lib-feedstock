@@ -1,6 +1,6 @@
 # Chemfiles version and SHA256
-{% set version = "0.8.0" %}
-{% set sha256 = "7a3b7b225e4439dc3026b25366d04f241e5510b6da415adaafcfa24f517794c7" %}
+{% set version = "0.8.1" %}
+{% set sha256 = "ba3feedbdd1e33dc690907988cb69595eb638566e12da353e07c46ebe73cfceb" %}
 
 # Chemfiles test data git version and SHA256
 {% set data_git = "c26f254cd7bff7e476bf065403fbd0a6a47fea38" %}
@@ -22,7 +22,7 @@ source:
 
 build:
   skip: true  # [win and vc<14]
-  number: 2
+  number: 0
 
 requirements:
   build:
