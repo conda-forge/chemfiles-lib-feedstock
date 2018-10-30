@@ -1,7 +1,3 @@
-if [[ "$(uname)" == "Linux" ]]; then
-    LDFLAGS="$LDFLAGS -static-libstdc++"
-fi
-
 cmake  -G "$CMAKE_GENERATOR" -DBUILD_SHARED_LIBS=ON -DCMAKE_INSTALL_PREFIX=$PREFIX .
 cmake --build . --config release --target install
 
