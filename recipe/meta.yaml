@@ -1,28 +1,27 @@
 # Chemfiles version and SHA256
-{% set version = "0.8.1" %}
-{% set sha256 = "4c9afc289e1e703e90f8da109b46c1163348de1e013018f492daabef94612a8f" %}
+{% set version = "0.9.0" %}
+{% set prerelease = "-rc1" %}
+{% set sha256 = "a3ab2280f047044f82f1bea82843ceb6099470b5e0d769e9f1d9b273d40dc849" %}
 
 # Chemfiles test data git version and SHA256
-{% set data_git = "c26f254cd7bff7e476bf065403fbd0a6a47fea38" %}
-{% set data_sha256 = "ba3feedbdd1e33dc690907988cb69595eb638566e12da353e07c46ebe73cfceb" %}
+{% set data_git = "dee3659fad8106611a9fd0f0a5ee4596f7fb869d" %}
+{% set data_sha256 = "a93d7891bff2844b136163cb5ce51fe6e15d9e0ab300d1fcdf32989ee9b62c71" %}
 
 package:
   name: chemfiles-lib
-  version: {{ version }}
+  version: {{ version }}{{ prerelease | list | reject("equalto", "-") | join }}
 
 source:
-  - fn: chemfiles-{{ version }}.tar.gz
-    url: https://github.com/chemfiles/chemfiles/archive/{{ version }}.tar.gz
+  - fn: chemfiles-{{ version }}{{ prerelease }}.tar.gz
+    url: https://github.com/chemfiles/chemfiles/archive/{{ version }}{{ prerelease }}.tar.gz
     sha256: {{ sha256 }}
-    patches:
-      - visibility-hidden.patch
   - url: https://github.com/chemfiles/tests-data/archive/{{ data_git }}.tar.gz
     sha256: {{ data_sha256 }}
     folder: tests/data
 
 build:
   skip: true  # [win and vc<14]
-  number: 2
+  number: 0
 
 requirements:
   build:
