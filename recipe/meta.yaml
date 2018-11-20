@@ -15,6 +15,8 @@ source:
   - fn: chemfiles-{{ version }}{{ prerelease }}.tar.gz
     url: https://github.com/chemfiles/chemfiles/archive/{{ version }}{{ prerelease }}.tar.gz
     sha256: {{ sha256 }}
+    patches:
+        - export-extern-templates.patch
   - url: https://github.com/chemfiles/tests-data/archive/{{ data_git }}.tar.gz
     sha256: {{ data_sha256 }}
     folder: tests/data
