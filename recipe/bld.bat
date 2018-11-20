@@ -3,6 +3,6 @@ cmake --build . --config Release --target install
 
 :: Build and run the tests
 cmake -E touch tests\data\dee3659fad8106611a9fd0f0a5ee4596f7fb869d
-cmake -DCHFL_BUILD_TESTS=ON .
+cmake -DCHFL_BUILD_TESTS=ON -DCHFL_BUILD_DOCTESTS=OFF .
 cmake --build . --config Release
 ctest --output-on-failure -C Release
