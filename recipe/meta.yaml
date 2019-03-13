@@ -1,7 +1,7 @@
 # Chemfiles version and SHA256
-{% set version = "0.9.0" %}
+{% set version = "0.9.1" %}
 {% set prerelease = "" %}
-{% set sha256 = "30627daca205fac25fd1ad992c01d9fa134fc7f8f6056194e7c1fd6f000632a7" %}
+{% set sha256 = "8291c31a3d3fac188aaa21cbe3b957428c2202496334a64e76ab9c0e03a37c43" %}
 
 # Chemfiles test data git version and SHA256
 {% set data_git = "a6d074210791532045e42d7a8b252a0169eff4a7" %}
