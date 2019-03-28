@@ -19,26 +19,42 @@ source:
     sha256: {{ data_sha256 }}
     folder: tests/data
 
+{% set CMAKE_INSTALL_PREFIX = "$PREFIX" %}  # [not win]
+{% set CMAKE_INSTALL_PREFIX = "%PREFIX%/Library" %}  # [win]
+{% set CMAKE_COMPILERS = "" %}  # [not win]
+{% set CMAKE_COMPILERS = "-DCMAKE_C_COMPILER=cl.exe -DCMAKE_CXX_COMPILER=cl.exe" %}  # [win]
+
 build:
   skip: true  # [win and vc<14]
-  number: 0
+  number: 1
+  script: |
+    cmake -G Ninja {{ CMAKE_COMPILERS }} -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=ON -DCMAKE_INSTALL_PREFIX={{ CMAKE_INSTALL_PREFIX }} .
+    cmake --build . --config Release --target install
+
+    # Build and run the tests
+    cmake -E touch tests/data/{{ data_git }}
+    cmake -DCHFL_BUILD_TESTS=ON -DCHFL_BUILD_DOCTESTS=OFF .
+    cmake --build . --config Release
+    ctest --output-on-failure -C Release
 
 requirements:
   build:
     - cmake
+    - ninja
     - {{ compiler('c') }}
     - {{ compiler('cxx') }}
 
 test:
   commands:
-    - "true"  # this was already done during the build
+    - test -f $PREFIX/lib/libchemfiles$SHLIB_EXT  # [unix]
+    - if not exist %PREFIX%\\Library\\bin\\chemfiles.dll exit 1  # [win]
 
 about:
   home: https://chemfiles.org
-  license: BSD-3-Clause
+  license: BSD
   license_file: LICENSE
   summary: Modern library for chemistry file reading and writing
-  doc_url: https://chemfiles.org/chemfiles/0.8.0/
+  doc_url: https://chemfiles.org/chemfiles/{{ version }}/
   dev_url: https://github.com/chemfiles/chemfiles
 
 extra:
