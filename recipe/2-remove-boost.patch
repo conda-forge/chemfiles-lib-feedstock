@@ -1,0 +1,318 @@
+diff --git a/tests/CMakeLists.txt b/tests/CMakeLists.txt
+index a9dddea5..7829f6c2 100644
+--- a/tests/CMakeLists.txt
++++ b/tests/CMakeLists.txt
+@@ -121,20 +121,6 @@ endforeach()
+ file(RELATIVE_PATH VERSION_FILE_PATH ${CMAKE_CURRENT_BINARY_DIR} ${PROJECT_SOURCE_DIR}/VERSION)
+ target_compile_definitions(c-misc PRIVATE "-DVERSION_FILE_PATH=\"${VERSION_FILE_PATH}\"")
+ 
+-# BOOST asio (used for hostname test) requires some additional system
+-# libraries, link to them explicitly here
+-if("${CMAKE_CXX_COMPILER_ID}" MATCHES "PGI" AND "${CMAKE_SYSTEM_NAME}" MATCHES "Linux")
+-    set(EXTRA_BOOST_ASIO_LIBS atomic)
+-elseif("${CMAKE_SYSTEM_PROCESSOR}" MATCHES "^(arm.*|ARM.*)" OR
+-       "${CMAKE_SYSTEM_PROCESSOR}" MATCHES "^(aarch64.*|AARCH64.*)" OR
+-       "${CMAKE_SYSTEM_PROCESSOR}" MATCHES "^(powerpc|ppc)64le" OR
+-       "${CMAKE_SYSTEM_PROCESSOR}" MATCHES "^(powerpc|ppc)64"
+-   )
+-    find_package(Threads REQUIRED)
+-    set(EXTRA_BOOST_ASIO_LIBS ${CMAKE_THREAD_LIBS_INIT})
+-endif()
+-target_link_libraries(utils ${EXTRA_BOOST_ASIO_LIBS})
+-
+ function(chfl_doctest _name_ _file_)
+     if(NOT ${CHFL_BUILD_DOCTESTS})
+         return()
+diff --git a/tests/external/CMakeLists.txt b/tests/external/CMakeLists.txt
+index 6294e830..b0f693ae 100644
+--- a/tests/external/CMakeLists.txt
++++ b/tests/external/CMakeLists.txt
+@@ -6,28 +6,3 @@ target_include_directories(test_helpers PUBLIC $<TARGET_PROPERTY:chemfiles,INCLU
+ if(${EMSCRIPTEN})
+     target_link_libraries(test_helpers nodefs.js)
+ endif()
+-
+-if(NOT EXISTS "${CMAKE_CURRENT_BINARY_DIR}/boost/LICENSE_1_0.txt")
+-    message(STATUS "Unpacking Boost sources")
+-    execute_process(
+-        COMMAND ${CMAKE_COMMAND} -E tar xf ${CMAKE_CURRENT_SOURCE_DIR}/boost.tar.gz
+-        WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+-    )
+-endif()
+-
+-if(MSVC)
+-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /EHsc")
+-    # Disable warnings for boost
+-    string(REGEX REPLACE "/Wall" "/w" CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
+-else()
+-    # Disable warnings for boost
+-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -w")
+-endif()
+-
+-file(GLOB_RECURSE boost_filesystem_src ${CMAKE_CURRENT_BINARY_DIR}/boost/src/*.cpp)
+-add_library(boost_filesystem STATIC ${boost_filesystem_src})
+-
+-target_include_directories(boost_filesystem SYSTEM BEFORE PUBLIC ${CMAKE_CURRENT_BINARY_DIR}/boost/include)
+-target_compile_definitions(boost_filesystem PUBLIC BOOST_ALL_NO_LIB)
+-
+-target_link_libraries(test_helpers boost_filesystem)
+diff --git a/tests/external/helpers.cpp b/tests/external/helpers.cpp
+index bca0986c..01ed7f3a 100644
+--- a/tests/external/helpers.cpp
++++ b/tests/external/helpers.cpp
+@@ -7,14 +7,15 @@
+ #include "chemfiles.hpp"
+ 
+ #include <cstdlib>
++#include <cstdio>
++#include <stdexcept>
+ #include <new>
+ 
+-#include <boost/filesystem.hpp>
+-namespace fs=boost::filesystem;
+-
+ #ifdef CHEMFILES_WINDOWS
+ #define WIN32_LEAN_AND_MEAN
+ #include <windows.h>
++#else
++#include <unistd.h>
+ #endif
+ 
+ #ifdef __EMSCRIPTEN__
+@@ -72,19 +73,45 @@ bool is_valgrind_and_travis() {
+ }
+ 
+ NamedTempPath::NamedTempPath(std::string extension) {
+-    // Maybe operator overloading have been too far?
+-    auto path = fs::temp_directory_path() / fs::unique_path();
+-    // Convert std::wstring to std::string, needed on windows. This is fine
+-    // because we are only using this class internally, with characters in the
+-    // ASCII range.
+-    path_ = std::string(path.native().begin(), path.native().end());
+-    path_ += extension;
++#ifdef CHEMFILES_WINDOWS
++    char temp_path[MAX_PATH + 1] = {0};
++    auto status = GetTempPathA(MAX_PATH + 1, temp_path);
++    if (status == 0) {
++        throw std::runtime_error("failed to get temporary files directory");
++    }
++
++    auto attributes = GetFileAttributesA(temp_path);
++    if (attributes == INVALID_FILE_ATTRIBUTES || !(attributes & FILE_ATTRIBUTE_DIRECTORY)) {
++        throw std::runtime_error("temporary files directory '" + std::string(temp_path) + "' do not exists");
++    }
++
++    char buffer[MAX_PATH] = {0};
++    status = GetTempFileNameA(temp_path, "chemfiles-tmp-", 0, buffer);
++    if (status == 0) {
++        throw std::runtime_error("failed to get a temporary file name");
++    }
++#else
++    char buffer[] = "/tmp/chemfiles-tmp-XXXXXX";
++    auto status = mkstemp(buffer);
++    if (status == -1) {
++        throw std::runtime_error("failed to get a temporary file name");
++    }
++#endif
++
++    path_ = buffer + extension;
+ }
+ 
+ NamedTempPath::~NamedTempPath() {
+     remove(path_.c_str());
+ }
+ 
++void copy_file(std::string src, std::string dst) {
++    std::ifstream input(src, std::ios::binary);
++    std::ofstream output(dst, std::ios::binary);
++
++    output << input.rdbuf();
++}
++
+ static bool FAIL_NEXT_ALLOCATION = false;
+ 
+ void fail_next_allocation() {
+diff --git a/tests/external/helpers.hpp b/tests/external/helpers.hpp
+index 1ced5164..11bffb70 100644
+--- a/tests/external/helpers.hpp
++++ b/tests/external/helpers.hpp
+@@ -38,6 +38,9 @@ private:
+     std::string path_;
+ };
+ 
++/// copy the file at `src` to `dst`
++void copy_file(std::string src, std::string dst);
++
+ // On Windows, disable the "Application error" dialog box, because it
+ // requires an human intervention, and there is no one on Appveyor.
+ //
+diff --git a/tests/files/tng-file.cpp b/tests/files/tng-file.cpp
+index f6833c41..b5979bf8 100644
+--- a/tests/files/tng-file.cpp
++++ b/tests/files/tng-file.cpp
+@@ -7,9 +7,6 @@
+ #include "chemfiles/files/TNGFile.hpp"
+ using namespace chemfiles;
+ 
+-#include <boost/filesystem.hpp>
+-namespace fs=boost::filesystem;
+-
+ #define CHECK_SUCCESS(x) CHECK(x == TNG_SUCCESS)
+ 
+ TEST_CASE("TNG files") {
+@@ -48,7 +45,7 @@ TEST_CASE("TNG files") {
+ 
+     SECTION("Append") {
+         auto filename = NamedTempPath(".tng");
+-        fs::copy_file("data/tng/example.tng", filename.path());
++        copy_file("data/tng/example.tng", filename.path());
+         {
+             // Just checking constructor and destructor
+             TNGFile file(filename, File::APPEND);
+diff --git a/tests/files/xdr-file.cpp b/tests/files/xdr-file.cpp
+index 5eecf6e7..afff8afe 100644
+--- a/tests/files/xdr-file.cpp
++++ b/tests/files/xdr-file.cpp
+@@ -7,9 +7,6 @@
+ #include "chemfiles/files/XDRFile.hpp"
+ using namespace chemfiles;
+ 
+-#include <boost/filesystem.hpp>
+-namespace fs=boost::filesystem;
+-
+ TEST_CASE("XTC files") {
+     SECTION("Read") {
+         XDRFile file(XDRFile::XTC, "data/xtc/ubiquitin.xtc", File::READ);
+@@ -38,7 +35,7 @@ TEST_CASE("XTC files") {
+ 
+     SECTION("Append") {
+         auto filename = NamedTempPath(".xtc");
+-        fs::copy_file("data/xtc/ubiquitin.xtc", filename.path());
++        copy_file("data/xtc/ubiquitin.xtc", filename.path());
+         XDRFile file(XDRFile::XTC, filename, File::APPEND);
+ 
+         CHECK(file.natoms() == 20455);
+@@ -83,7 +80,7 @@ TEST_CASE("TRR files") {
+ 
+     SECTION("Append") {
+         auto filename = NamedTempPath(".trr");
+-        fs::copy_file("data/trr/water.trr", filename.path());
++        copy_file("data/trr/water.trr", filename.path());
+         XDRFile file(XDRFile::TRR, filename, File::APPEND);
+ 
+         CHECK(file.natoms() == 297);
+diff --git a/tests/formats/amber-netcdf.cpp b/tests/formats/amber-netcdf.cpp
+index 6a9b5e19..5bd12903 100644
+--- a/tests/formats/amber-netcdf.cpp
++++ b/tests/formats/amber-netcdf.cpp
+@@ -6,10 +6,6 @@
+ #include "chemfiles.hpp"
+ using namespace chemfiles;
+ 
+-#include <boost/filesystem.hpp>
+-namespace fs=boost::filesystem;
+-
+-
+ TEST_CASE("Read files in NetCDF format") {
+     SECTION("Read one frame") {
+         auto file = Trajectory("data/netcdf/water.nc");
+diff --git a/tests/formats/cml.cpp b/tests/formats/cml.cpp
+index 11067897..ae34d439 100644
+--- a/tests/formats/cml.cpp
++++ b/tests/formats/cml.cpp
+@@ -9,9 +9,6 @@
+ #include "chemfiles.hpp"
+ using namespace chemfiles;
+ 
+-#include <boost/filesystem.hpp>
+-namespace fs=boost::filesystem;
+-
+ TEST_CASE("Read files in CML format") {
+     SECTION("Check nsteps") {
+         auto file = Trajectory("data/cml/ethane.cml");
+diff --git a/tests/formats/compressed-xyz.cpp b/tests/formats/compressed-xyz.cpp
+index 2d0835e4..1eda1043 100644
+--- a/tests/formats/compressed-xyz.cpp
++++ b/tests/formats/compressed-xyz.cpp
+@@ -9,9 +9,6 @@
+ #include "chemfiles/files/XzFile.hpp"
+ using namespace chemfiles;
+ 
+-#include <boost/filesystem.hpp>
+-namespace fs=boost::filesystem;
+-
+ static void check_read_file(Trajectory&& file) {
+     REQUIRE(file.nsteps() == 100);
+ 
+diff --git a/tests/formats/mmcif.cpp b/tests/formats/mmcif.cpp
+index a0896b79..e02f826c 100644
+--- a/tests/formats/mmcif.cpp
++++ b/tests/formats/mmcif.cpp
+@@ -9,9 +9,6 @@
+ #include "chemfiles.hpp"
+ using namespace chemfiles;
+ 
+-#include <boost/filesystem.hpp>
+-namespace fs=boost::filesystem;
+-
+ TEST_CASE("Read files in mmCIF format") {
+     SECTION("Read single step") {
+         // This is how I imagine most people will resolve the conflict between
+diff --git a/tests/parse.cpp b/tests/parse.cpp
+index 3f08a645..a54efd0b 100644
+--- a/tests/parse.cpp
++++ b/tests/parse.cpp
+@@ -1,8 +1,6 @@
+ // Chemfiles, a modern library for chemistry file reading and writing
+ // Copyright (C) Guillaume Fraux and contributors -- BSD license
+ #include <catch.hpp>
+-#include <boost/filesystem.hpp>
+-namespace fs=boost::filesystem;
+ 
+ #include "chemfiles/parse.hpp"
+ #include "chemfiles/Error.hpp"
+diff --git a/tests/utils.cpp b/tests/utils.cpp
+index 0fb774ab..b32a6fff 100644
+--- a/tests/utils.cpp
++++ b/tests/utils.cpp
+@@ -1,24 +1,9 @@
+ // Chemfiles, a modern library for chemistry file reading and writing
+ // Copyright (C) Guillaume Fraux and contributors -- BSD license
+ #include <catch.hpp>
+-#include <boost/filesystem.hpp>
+-namespace fs=boost::filesystem;
+-#include <boost/asio.hpp>
+-namespace ip = boost::asio::ip;
+-
+ #include "chemfiles/utils.hpp"
+ #include "chemfiles/Error.hpp"
+ 
+-TEST_CASE("hostname") {
+-    auto hostname = ip::host_name();
+-    CHECK(chemfiles::hostname() == hostname);
+-}
+-
+-TEST_CASE("Current directory") {
+-    auto cwd = fs::current_path();
+-    CHECK(chemfiles::current_directory() == cwd.string());
+-}
+-
+ TEST_CASE("trim") {
+     CHECK(chemfiles::trim("   ") == "");
+     CHECK(chemfiles::trim("   left") == "left");
+diff --git a/tests/valgrind.supp b/tests/valgrind.supp
+index 3cfc40bf..83a96ded 100644
+--- a/tests/valgrind.supp
++++ b/tests/valgrind.supp
+@@ -1,11 +1,3 @@
+-{
+-   boost::filesystem
+-   Memcheck:Cond
+-   ...
+-   fun:_ZN5boost10filesystem6detail11unique_pathERKNS0_4pathEPNS_6system10error_codeE
+-   ...
+-}
+-
+ {
+    Objc runtime
+    Memcheck:Leak

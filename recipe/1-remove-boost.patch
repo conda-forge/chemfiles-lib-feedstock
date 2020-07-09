@@ -1,0 +1,398 @@
+commit 5a48e13d38c77b27d7d72e7a3c6b0be9dd3fb9a8
+Author: Guillaume Fraux <guillaume.fraux@chimie-paristech.fr>
+Date:   Thu Jul 9 14:54:23 2020 +0200
+
+    Remove the dependency on Boost in tests
+
+diff --git a/tests/external/CMakeLists.txt b/tests/external/CMakeLists.txt
+index 6294e830..b0f693ae 100644
+--- a/tests/external/CMakeLists.txt
++++ b/tests/external/CMakeLists.txt
+@@ -6,28 +6,3 @@ target_include_directories(test_helpers PUBLIC $<TARGET_PROPERTY:chemfiles,INCLU
+ if(${EMSCRIPTEN})
+     target_link_libraries(test_helpers nodefs.js)
+ endif()
+-
+-if(NOT EXISTS "${CMAKE_CURRENT_BINARY_DIR}/boost/LICENSE_1_0.txt")
+-    message(STATUS "Unpacking Boost sources")
+-    execute_process(
+-        COMMAND ${CMAKE_COMMAND} -E tar xf ${CMAKE_CURRENT_SOURCE_DIR}/boost.tar.gz
+-        WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+-    )
+-endif()
+-
+-if(MSVC)
+-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /EHsc")
+-    # Disable warnings for boost
+-    string(REGEX REPLACE "/Wall" "/w" CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
+-else()
+-    # Disable warnings for boost
+-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -w")
+-endif()
+-
+-file(GLOB_RECURSE boost_filesystem_src ${CMAKE_CURRENT_BINARY_DIR}/boost/src/*.cpp)
+-add_library(boost_filesystem STATIC ${boost_filesystem_src})
+-
+-target_include_directories(boost_filesystem SYSTEM BEFORE PUBLIC ${CMAKE_CURRENT_BINARY_DIR}/boost/include)
+-target_compile_definitions(boost_filesystem PUBLIC BOOST_ALL_NO_LIB)
+-
+-target_link_libraries(test_helpers boost_filesystem)
+diff --git a/tests/external/helpers.cpp b/tests/external/helpers.cpp
+index bca0986c..cef32231 100644
+--- a/tests/external/helpers.cpp
++++ b/tests/external/helpers.cpp
+@@ -7,14 +7,15 @@
+ #include "chemfiles.hpp"
+ 
+ #include <cstdlib>
++#include <cstdio>
++#include <stdexcept>
+ #include <new>
+ 
+-#include <boost/filesystem.hpp>
+-namespace fs=boost::filesystem;
+-
+ #ifdef CHEMFILES_WINDOWS
+ #define WIN32_LEAN_AND_MEAN
+ #include <windows.h>
++#else
++#include <unistd.h>
+ #endif
+ 
+ #ifdef __EMSCRIPTEN__
+@@ -72,19 +73,45 @@ bool is_valgrind_and_travis() {
+ }
+ 
+ NamedTempPath::NamedTempPath(std::string extension) {
+-    // Maybe operator overloading have been too far?
+-    auto path = fs::temp_directory_path() / fs::unique_path();
+-    // Convert std::wstring to std::string, needed on windows. This is fine
+-    // because we are only using this class internally, with characters in the
+-    // ASCII range.
+-    path_ = std::string(path.native().begin(), path.native().end());
+-    path_ += extension;
++#ifdef CHEMFILES_WINDOWS
++    char temp_path[MAX_PATH + 1] = {0};
++    auto status = GetTempPathA(MAX_PATH + 1, temp_path);
++    if (status == 0) {
++        throw std::runtime_error("failed to get temporary files directory");
++    }
++
++    auto attributes = GetFileAttributesA(temp_path);
++    if (attributes == INVALID_FILE_ATTRIBUTES || !(attributes & FILE_ATTRIBUTE_DIRECTORY)) {
++        throw std::runtime_error("temporary files directory '" + std::string(temp_path) + "' do not exists");
++    }
++
++    char buffer[MAX_PATH] = {0};
++    status = GetTempFileNameA(temp_path, "chemfiles-tmp-", 0, buffer);
++    if (status == 0) {
++        throw std::runtime_error("failed to get a temporary file name");
++    }
++#else
++    char buffer[] = "/tmp/chemfiles-tmp-XXXXXX";
++    auto status = mkstemp(buffer);
++    if (status == -1) {
++        throw std::runtime_error("failed to get a temporary file name");
++    }
++#endif
++
++    path_ = buffer + extension;
+ }
+ 
+ NamedTempPath::~NamedTempPath() {
+     remove(path_.c_str());
+ }
+ 
++void copy_file(std::string src, std::string dst) {
++    std::ifstream input(src, std::ios::binary);
++    std::ofstream output(dst, std::ios::binary);
++
++    output << input.rdbuf();
++}
++
+ static bool FAIL_NEXT_ALLOCATION = false;
+ 
+ void fail_next_allocation() {
+diff --git a/tests/external/helpers.hpp b/tests/external/helpers.hpp
+index e0b403ee..edb91b2c 100644
+--- a/tests/external/helpers.hpp
++++ b/tests/external/helpers.hpp
+@@ -38,6 +38,9 @@ private:
+     std::string path_;
+ };
+ 
++/// copy the file at `src` to `dst`
++void copy_file(std::string src, std::string dst);
++
+ // On Windows, disable the "Application error" dialog box, because it
+ // requires an human intervention, and there is no one on Appveyor.
+ //
+diff --git a/tests/files/tng-file.cpp b/tests/files/tng-file.cpp
+index f6833c41..b5979bf8 100644
+--- a/tests/files/tng-file.cpp
++++ b/tests/files/tng-file.cpp
+@@ -7,9 +7,6 @@
+ #include "chemfiles/files/TNGFile.hpp"
+ using namespace chemfiles;
+ 
+-#include <boost/filesystem.hpp>
+-namespace fs=boost::filesystem;
+-
+ #define CHECK_SUCCESS(x) CHECK(x == TNG_SUCCESS)
+ 
+ TEST_CASE("TNG files") {
+@@ -48,7 +45,7 @@ TEST_CASE("TNG files") {
+ 
+     SECTION("Append") {
+         auto filename = NamedTempPath(".tng");
+-        fs::copy_file("data/tng/example.tng", filename.path());
++        copy_file("data/tng/example.tng", filename.path());
+         {
+             // Just checking constructor and destructor
+             TNGFile file(filename, File::APPEND);
+diff --git a/tests/files/xdr-file.cpp b/tests/files/xdr-file.cpp
+index 5eecf6e7..afff8afe 100644
+--- a/tests/files/xdr-file.cpp
++++ b/tests/files/xdr-file.cpp
+@@ -7,9 +7,6 @@
+ #include "chemfiles/files/XDRFile.hpp"
+ using namespace chemfiles;
+ 
+-#include <boost/filesystem.hpp>
+-namespace fs=boost::filesystem;
+-
+ TEST_CASE("XTC files") {
+     SECTION("Read") {
+         XDRFile file(XDRFile::XTC, "data/xtc/ubiquitin.xtc", File::READ);
+@@ -38,7 +35,7 @@ TEST_CASE("XTC files") {
+ 
+     SECTION("Append") {
+         auto filename = NamedTempPath(".xtc");
+-        fs::copy_file("data/xtc/ubiquitin.xtc", filename.path());
++        copy_file("data/xtc/ubiquitin.xtc", filename.path());
+         XDRFile file(XDRFile::XTC, filename, File::APPEND);
+ 
+         CHECK(file.natoms() == 20455);
+@@ -83,7 +80,7 @@ TEST_CASE("TRR files") {
+ 
+     SECTION("Append") {
+         auto filename = NamedTempPath(".trr");
+-        fs::copy_file("data/trr/water.trr", filename.path());
++        copy_file("data/trr/water.trr", filename.path());
+         XDRFile file(XDRFile::TRR, filename, File::APPEND);
+ 
+         CHECK(file.natoms() == 297);
+diff --git a/tests/formats/amber-netcdf.cpp b/tests/formats/amber-netcdf.cpp
+index 4c7575b3..480551d7 100644
+--- a/tests/formats/amber-netcdf.cpp
++++ b/tests/formats/amber-netcdf.cpp
+@@ -6,10 +6,6 @@
+ #include "chemfiles.hpp"
+ using namespace chemfiles;
+ 
+-#include <boost/filesystem.hpp>
+-namespace fs=boost::filesystem;
+-
+-
+ TEST_CASE("Read files in NetCDF format") {
+     SECTION("Read one frame") {
+         auto file = Trajectory("data/netcdf/water.nc");
+@@ -48,7 +44,6 @@ TEST_CASE("Read files in NetCDF format") {
+     }
+ }
+ 
+-
+ TEST_CASE("Write files in NetCDF format") {
+     auto tmpfile = NamedTempPath(".nc");
+ 
+diff --git a/tests/formats/cml.cpp b/tests/formats/cml.cpp
+index d2168520..8e9b2187 100644
+--- a/tests/formats/cml.cpp
++++ b/tests/formats/cml.cpp
+@@ -9,9 +9,6 @@
+ #include "chemfiles.hpp"
+ using namespace chemfiles;
+ 
+-#include <boost/filesystem.hpp>
+-namespace fs=boost::filesystem;
+-
+ TEST_CASE("Read files in CML format") {
+     SECTION("Check nsteps") {
+         auto file = Trajectory("data/cml/ethane.cml");
+diff --git a/tests/formats/compressed-xyz.cpp b/tests/formats/compressed-xyz.cpp
+index 8455a5b0..c1ef82d7 100644
+--- a/tests/formats/compressed-xyz.cpp
++++ b/tests/formats/compressed-xyz.cpp
+@@ -9,9 +9,6 @@
+ #include "chemfiles/files/XzFile.hpp"
+ using namespace chemfiles;
+ 
+-#include <boost/filesystem.hpp>
+-namespace fs=boost::filesystem;
+-
+ static void check_read_file(Trajectory&& file) {
+     REQUIRE(file.nsteps() == 100);
+ 
+diff --git a/tests/formats/mmcif.cpp b/tests/formats/mmcif.cpp
+index 6e664e3e..2939edda 100644
+--- a/tests/formats/mmcif.cpp
++++ b/tests/formats/mmcif.cpp
+@@ -9,9 +9,6 @@
+ #include "chemfiles.hpp"
+ using namespace chemfiles;
+ 
+-#include <boost/filesystem.hpp>
+-namespace fs=boost::filesystem;
+-
+ TEST_CASE("Read files in mmCIF format") {
+     SECTION("Read single step") {
+         // This is how I imagine most people will resolve the conflict between
+diff --git a/tests/formats/sdf.cpp b/tests/formats/sdf.cpp
+index 1ad32360..3f10cb11 100644
+--- a/tests/formats/sdf.cpp
++++ b/tests/formats/sdf.cpp
+@@ -9,9 +9,6 @@
+ #include "chemfiles.hpp"
+ using namespace chemfiles;
+ 
+-#include <boost/filesystem.hpp>
+-namespace fs=boost::filesystem;
+-
+ TEST_CASE("Read files in SDF format") {
+     SECTION("Check nsteps") {
+         auto file = Trajectory("data/sdf/aspirin.sdf");
+@@ -98,26 +95,22 @@ TEST_CASE("Read files in SDF format") {
+     }
+ }
+ 
+-// To use in loops in order to iterate over files in a specific directory.
+-struct directory_files_iterator {
+-    typedef fs::recursive_directory_iterator iterator;
+-    directory_files_iterator(fs::path p) : p_(p) {}
+-
+-    iterator begin() { return fs::recursive_directory_iterator(p_); }
+-    iterator end() { return fs::recursive_directory_iterator(); }
+-
+-    fs::path p_;
+-};
+-
+ TEST_CASE("Errors in SDF format") {
+-    for (auto entry : directory_files_iterator("data/sdf/bad/")) {
++    std::vector<std::pair<std::string, std::string>> FILES_AND_ERROR = {
++        {"bad_atom_line.sdf", "atom line is too small for SDF: '    3.7320   -0.0600'"},
++        {"bad_counts_line.sdf", "can not read file 'data/sdf/bad/bad_counts_line.sdf' at step 0, it does not contain any step"},
++        {"bad_counts_line2.sdf", "can not read file 'data/sdf/bad/bad_counts_line2.sdf' at step 0, it does not contain any step"},
++        {"blank.sdf", "can not read file 'data/sdf/bad/blank.sdf' at step 0, it does not contain any step"},
++    };
++
++    for (auto entry: FILES_AND_ERROR) {
+         auto test = [=](){
+             // We can throw either when creating the trajectory, or when reading
+             // the frame, depending on the type of error
+-            auto file = Trajectory(entry.path().string());
+-            file.read();
++            auto trajectory = Trajectory("data/sdf/bad/" + entry.first);
++            trajectory.read();
+         };
+-        CHECK_THROWS(test());
++        CHECK_THROWS_WITH(test(), entry.second);
+     }
+ }
+ 
+diff --git a/tests/formats/smi.cpp b/tests/formats/smi.cpp
+index 0c49a9f8..f50760af 100644
+--- a/tests/formats/smi.cpp
++++ b/tests/formats/smi.cpp
+@@ -9,10 +9,6 @@
+ #include "chemfiles.hpp"
+ using namespace chemfiles;
+ 
+-#include <boost/filesystem.hpp>
+-namespace fs=boost::filesystem;
+-
+-
+ TEST_CASE("Read files in SMI format") {
+     SECTION("Check nsteps") {
+         auto file = Trajectory("data/smi/test.smi");
+@@ -225,26 +221,24 @@ TEST_CASE("Check parsing results") {
+     }
+ }
+ 
+-// To use in loops in order to iterate over files in a specific directory.
+-struct directory_files_iterator {
+-    typedef fs::recursive_directory_iterator iterator;
+-    directory_files_iterator(fs::path p) : p_(p) {}
+-
+-    iterator begin() { return fs::recursive_directory_iterator(p_); }
+-    iterator end() { return fs::recursive_directory_iterator(); }
+-
+-    fs::path p_;
+-};
+-
+ TEST_CASE("Errors in SMI format") {
+-    for (auto entry : directory_files_iterator("data/smi/bad/")) {
++    std::vector<std::pair<std::string, std::string>> FILES_AND_ERROR = {
++        {"bad_element.smi", "SMI Reader: bare non-organic atom: 'W'"},
++        {"bad_paren.smi", "SMI Reader: 1 unclosed '('(s)"},
++        {"bad_percentage_sign.smi", "can not have a bond between an atom and itself"},
++        {"bad_ring.smi", "argument index out of range"},
++        {"bad_symbol.smi", "SMI Reader: unknown symbol: '`'"},
++        {"misplaced_property.smi", "SMI Reader: symbol not allowed outside of property: '@'"},
++    };
++
++    for (auto entry: FILES_AND_ERROR) {
+         auto test = [=](){
+             // We can throw either when creating the trajectory, or when reading
+             // the frame, depending on the type of error
+-            auto file = Trajectory(entry.path().string());
+-            file.read();
++            auto trajectory = Trajectory("data/smi/bad/" + entry.first);
++            trajectory.read();
+         };
+-        CHECK_THROWS(test());
++        CHECK_THROWS_WITH(test(), entry.second);
+     }
+ }
+ 
+diff --git a/tests/parse.cpp b/tests/parse.cpp
+index c4be2d8e..102f8912 100644
+--- a/tests/parse.cpp
++++ b/tests/parse.cpp
+@@ -1,8 +1,6 @@
+ // Chemfiles, a modern library for chemistry file reading and writing
+ // Copyright (C) Guillaume Fraux and contributors -- BSD license
+ #include <catch.hpp>
+-#include <boost/filesystem.hpp>
+-namespace fs=boost::filesystem;
+ 
+ #include "chemfiles/parse.hpp"
+ #include "chemfiles/Error.hpp"
+diff --git a/tests/utils.cpp b/tests/utils.cpp
+index 0fb774ab..b32a6fff 100644
+--- a/tests/utils.cpp
++++ b/tests/utils.cpp
+@@ -1,24 +1,9 @@
+ // Chemfiles, a modern library for chemistry file reading and writing
+ // Copyright (C) Guillaume Fraux and contributors -- BSD license
+ #include <catch.hpp>
+-#include <boost/filesystem.hpp>
+-namespace fs=boost::filesystem;
+-#include <boost/asio.hpp>
+-namespace ip = boost::asio::ip;
+-
+ #include "chemfiles/utils.hpp"
+ #include "chemfiles/Error.hpp"
+ 
+-TEST_CASE("hostname") {
+-    auto hostname = ip::host_name();
+-    CHECK(chemfiles::hostname() == hostname);
+-}
+-
+-TEST_CASE("Current directory") {
+-    auto cwd = fs::current_path();
+-    CHECK(chemfiles::current_directory() == cwd.string());
+-}
+-
+ TEST_CASE("trim") {
+     CHECK(chemfiles::trim("   ") == "");
+     CHECK(chemfiles::trim("   left") == "left");

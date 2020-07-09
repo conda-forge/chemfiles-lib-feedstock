@@ -15,29 +15,43 @@ source:
   - fn: chemfiles-{{ version }}{{ prerelease }}.tar.gz
     url: https://github.com/chemfiles/chemfiles/archive/{{ version }}{{ prerelease }}.tar.gz
     sha256: {{ sha256 }}
+    patches:
+      - 0-external-libs.patch
+      - 1-remove-boost.patch
   - url: https://github.com/chemfiles/tests-data/archive/{{ data_git }}.tar.gz
     sha256: {{ data_sha256 }}
     folder: tests/data
 
-{% set CMAKE_INSTALL_PREFIX = "$PREFIX" %}  # [not win]
-{% set CMAKE_INSTALL_PREFIX = "%PREFIX%/Library" %}  # [win]
+{% set CMAKE_INSTALL_PREFIX = "-DCMAKE_INSTALL_PREFIX=$PREFIX" %}  # [not win]
+{% set CMAKE_INSTALL_PREFIX = "-DCMAKE_INSTALL_PREFIX=%PREFIX%/Library" %}  # [win]
+
 {% set CMAKE_COMPILERS = "" %}  # [not win]
 {% set CMAKE_COMPILERS = "-DCMAKE_C_COMPILER=cl.exe -DCMAKE_CXX_COMPILER=cl.exe" %}  # [win]
-{% set CMAKE_FLAGS = "" %}  # [not win]
+
+{% set EXTRA_FLAGS = "" %}  # [not win]
 # Remove -GL from CXXFLAGS as this takes too much time and memory
-{% set CMAKE_FLAGS = "-DCMAKE_CXX_FLAGS=-MD -DCMAKE_C_FLAGS=-MD" %}  # [win]
+{% set EXTRA_FLAGS = "-DCMAKE_CXX_FLAGS=-MD -DCMAKE_C_FLAGS=-MD" %}  # [win]
+
+{% set CHFL_CONFIG = "-DCHFL_SYSTEM_NETCDF=ON -DCHFL_SYSTEM_LZMA=ON -DCHFL_SYSTEM_BZIP2=ON" %}
+{% set CMAKE_CONFIG = "-DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=ON" %}
+
+{% set TESTS_PATH = "export DYLD_FALLBACK_LIBRARY_PATH=$(dirname $CLANG)/../lib" %}  # [osx]
+{% set TESTS_PATH = "" %}  # [not osx]
 
 build:
   skip: true  # [win and vc<14]
-  number: 0
+  number: 1
   script: |
-    cmake -G Ninja {{ CMAKE_COMPILERS }} {{ CMAKE_FLAGS }} -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=ON -DCMAKE_INSTALL_PREFIX={{ CMAKE_INSTALL_PREFIX }} .
-    cmake --build . --config Release --target install -- -v
+    cmake -G Ninja {{ CMAKE_COMPILERS }} {{ EXTRA_FLAGS }} {{ CMAKE_CONFIG }} {{ CHFL_CONFIG }} {{ CMAKE_INSTALL_PREFIX }} .
+    cmake  .
+    cmake --build . --config Release --target install
 
     # Build and run the tests
     cmake -E touch tests/data/{{ data_git }}
     cmake -DCHFL_BUILD_TESTS=ON -DCHFL_BUILD_DOCTESTS=OFF .
-    cmake --build . --config Release -- -v
+    cmake --build . --config Release
+
+    {{ TESTS_PATH }}
     ctest --output-on-failure -C Release
 
 requirements:
@@ -46,8 +60,14 @@ requirements:
     - ninja
     - {{ compiler('c') }}
     - {{ compiler('cxx') }}
+    - libnetcdf
+    - bzip2
+    - xz
   run:
     - libcxx >=8  # [osx]
+    - libnetcdf
+    - bzip2
+    - xz
 
 test:
   commands:
