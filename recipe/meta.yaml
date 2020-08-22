@@ -40,7 +40,7 @@ source:
 
 build:
   skip: true  # [win and vc<14]
-  number: 2
+  number: 3
   script: |
     cmake -G Ninja {{ CMAKE_COMPILERS }} {{ EXTRA_FLAGS }} {{ CMAKE_CONFIG }} {{ CHFL_CONFIG }} {{ CMAKE_INSTALL_PREFIX }} .
     cmake  .
@@ -60,6 +60,7 @@ requirements:
     - ninja
     - {{ compiler('c') }}
     - {{ compiler('cxx') }}
+  host:
     - libnetcdf >=4.7.4
     - bzip2
     - xz
