@@ -61,7 +61,7 @@ requirements:
     - {{ compiler('c') }}
     - {{ compiler('cxx') }}
   host:
-    - libnetcdf >=4.7.4
+    - libnetcdf
     - bzip2
     - xz
   run:
