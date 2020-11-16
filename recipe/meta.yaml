@@ -1,11 +1,11 @@
 # Chemfiles version and SHA256
-{% set version = "0.9.3" %}
+{% set version = "0.10.0" %}
 {% set prerelease = "" %}
-{% set sha256 = "541878d189886dd52a247be711ab897fc6062c3275c34ee2e76a99b04132c74d" %}
+{% set sha256 = "521e7b3a4fe007ffca198b276e5c40a0ae4f2824050e29ccf32ef91dce21b102" %}
 
 # Chemfiles test data git version and SHA256
-{% set data_git = "5c5812856d902c51b0668df36bd20759cc7ae7ab" %}
-{% set data_sha256 = "183d1e0d828df9e82d68d490e9edb9eb3da8b64f99b0ae6f7643a637550633cf" %}
+{% set data_git = "8a1a48e368bc0f9611fcf8c153b3230cf5f51f8b" %}
+{% set data_sha256 = "a9c0f4d2879e58486204705d9ea4d4f43482b171b2b63c9292ced8136f049ef8" %}
 
 package:
   name: chemfiles-lib
@@ -15,9 +15,6 @@ source:
   - fn: chemfiles-{{ version }}{{ prerelease }}.tar.gz
     url: https://github.com/chemfiles/chemfiles/archive/{{ version }}{{ prerelease }}.tar.gz
     sha256: {{ sha256 }}
-    patches:
-      - 0-external-libs.patch
-      - 1-remove-boost.patch
   - url: https://github.com/chemfiles/tests-data/archive/{{ data_git }}.tar.gz
     sha256: {{ data_sha256 }}
     folder: tests/data
@@ -40,7 +37,7 @@ source:
 
 build:
   skip: true  # [win and vc<14]
-  number: 3
+  number: 0
   script: |
     cmake -G Ninja {{ CMAKE_COMPILERS }} {{ EXTRA_FLAGS }} {{ CMAKE_CONFIG }} {{ CHFL_CONFIG }} {{ CMAKE_INSTALL_PREFIX }} .
     cmake  .
