@@ -5,11 +5,13 @@ Home: https://chemfiles.org
 
 Package license: BSD-3-Clause
 
-Feedstock license: BSD-3-Clause
+Feedstock license: [BSD-3-Clause](https://github.com/conda-forge/chemfiles-lib-feedstock/blob/master/LICENSE.txt)
 
 Summary: Modern library for chemistry file reading and writing
 
+Development: https://github.com/chemfiles/chemfiles
 
+Documentation: https://chemfiles.org/chemfiles/0.10.0/
 
 Current build status
 ====================
