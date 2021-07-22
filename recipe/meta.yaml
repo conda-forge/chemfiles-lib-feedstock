@@ -1,11 +1,11 @@
 # Chemfiles version and SHA256
-{% set version = "0.10.0" %}
+{% set version = "0.10.1" %}
 {% set prerelease = "" %}
-{% set sha256 = "521e7b3a4fe007ffca198b276e5c40a0ae4f2824050e29ccf32ef91dce21b102" %}
+{% set sha256 = "a1bbc26d8e8c33f52a157df4aece0c07e126a986f29231c4fdcb9a55292dc5b0" %}
 
 # Chemfiles test data git version and SHA256
-{% set data_git = "8a1a48e368bc0f9611fcf8c153b3230cf5f51f8b" %}
-{% set data_sha256 = "a9c0f4d2879e58486204705d9ea4d4f43482b171b2b63c9292ced8136f049ef8" %}
+{% set data_git = "2db410d1f7651776e142676d26ec0d2cccd7b3cd" %}
+{% set data_sha256 = "8be5dc48c31a193d93ffe9fc7d0a785fc912427739b94dfee658827c497a7d53" %}
 
 package:
   name: chemfiles-lib
@@ -37,7 +37,7 @@ source:
 
 build:
   skip: true  # [win and vc<14]
-  number: 1
+  number: 0
   script: |
     cmake -G Ninja {{ CMAKE_COMPILERS }} {{ EXTRA_FLAGS }} {{ CMAKE_CONFIG }} {{ CHFL_CONFIG }} {{ CMAKE_INSTALL_PREFIX }} .
     cmake  .
