@@ -37,7 +37,7 @@ source:
 
 build:
   skip: true  # [win and vc<14]
-  number: 0
+  number: 1
   script: |
     cmake -G Ninja {{ CMAKE_COMPILERS }} {{ EXTRA_FLAGS }} {{ CMAKE_CONFIG }} {{ CHFL_CONFIG }} {{ CMAKE_INSTALL_PREFIX }} .
     cmake  .
