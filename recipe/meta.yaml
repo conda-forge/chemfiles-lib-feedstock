@@ -1,10 +1,3 @@
-{% set CHFL_CONFIG = "-DCHFL_SYSTEM_NETCDF=ON -DCHFL_SYSTEM_LZMA=ON -DCHFL_SYSTEM_BZIP2=ON" %}
-{% set CMAKE_COMPILERS = "-DCMAKE_C_COMPILER=cl.exe -DCMAKE_CXX_COMPILER=cl.exe" %}  # [win]
-{% set CMAKE_CONFIG = "-DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=ON" %}
-{% set CMAKE_INSTALL_PREFIX = "-DCMAKE_INSTALL_PREFIX=$PREFIX" %}  # [not win]
-{% set CMAKE_INSTALL_PREFIX = "-DCMAKE_INSTALL_PREFIX=%PREFIX%/Library" %}  # [win]
-{% set EXTRA_FLAGS = "-DCMAKE_CXX_FLAGS=-MD -DCMAKE_C_FLAGS=-MD" %}  # [win]
-{% set TESTS_PATH = "export DYLD_FALLBACK_LIBRARY_PATH=$(dirname $CLANG)/../lib" %}  # [osx]
 # Chemfiles version and SHA256
 {% set version = "0.10.2" %}
 {% set prerelease = "" %}
@@ -13,18 +6,6 @@
 # Chemfiles test data git version and SHA256
 {% set data_git = "2db410d1f7651776e142676d26ec0d2cccd7b3cd" %}
 {% set data_sha256 = "8be5dc48c31a193d93ffe9fc7d0a785fc912427739b94dfee658827c497a7d53" %}
-
-package:
-  name: chemfiles-lib
-  version: {{ version }}{{ prerelease | list | reject("equalto", "-") | join }}
-
-source:
-  - fn: chemfiles-{{ version }}{{ prerelease }}.tar.gz
-    url: https://github.com/chemfiles/chemfiles/archive/{{ version }}{{ prerelease }}.tar.gz
-    sha256: {{ sha256 }}
-  - url: https://github.com/chemfiles/tests-data/archive/{{ data_git }}.tar.gz
-    sha256: {{ data_sha256 }}
-    folder: tests/data
 
 {% set CMAKE_INSTALL_PREFIX = "-DCMAKE_INSTALL_PREFIX=$PREFIX" %}  # [not win]
 {% set CMAKE_INSTALL_PREFIX = "-DCMAKE_INSTALL_PREFIX=%PREFIX%/Library" %}  # [win]
@@ -41,6 +22,18 @@ source:
 
 {% set TESTS_PATH = "export DYLD_FALLBACK_LIBRARY_PATH=$(dirname $CLANG)/../lib" %}  # [osx]
 {% set TESTS_PATH = "" %}  # [not osx]
+
+package:
+  name: chemfiles-lib
+  version: {{ version }}{{ prerelease | list | reject("equalto", "-") | join }}
+
+source:
+  - fn: chemfiles-{{ version }}{{ prerelease }}.tar.gz
+    url: https://github.com/chemfiles/chemfiles/archive/{{ version }}{{ prerelease }}.tar.gz
+    sha256: {{ sha256 }}
+  - url: https://github.com/chemfiles/tests-data/archive/{{ data_git }}.tar.gz
+    sha256: {{ data_sha256 }}
+    folder: tests/data
 
 build:
   skip: true  # [win and vc<14]
