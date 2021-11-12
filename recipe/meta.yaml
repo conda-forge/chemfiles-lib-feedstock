@@ -17,7 +17,7 @@
 # Remove -GL from CXXFLAGS as this takes too much time and memory
 {% set EXTRA_FLAGS = "-DCMAKE_CXX_FLAGS=-MD -DCMAKE_C_FLAGS=-MD" %}  # [win]
 
-{% set CHFL_CONFIG = "-DCHFL_SYSTEM_NETCDF=ON -DCHFL_SYSTEM_LZMA=ON -DCHFL_SYSTEM_BZIP2=ON" %}
+{% set CHFL_CONFIG = "-DCHFL_SYSTEM_NETCDF=OFF -DCHFL_SYSTEM_LZMA=ON -DCHFL_SYSTEM_BZIP2=ON" %}
 {% set CMAKE_CONFIG = "-DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=ON" %}
 
 {% set TESTS_PATH = "export DYLD_FALLBACK_LIBRARY_PATH=$(dirname $CLANG)/../lib" %}  # [osx]
@@ -58,12 +58,10 @@ requirements:
     - {{ compiler('c') }}
     - {{ compiler('cxx') }}
   host:
-    - libnetcdf
     - bzip2
     - xz
   run:
     - libcxx >=8  # [osx]
-    - libnetcdf >=4.7.4
     - bzip2
     - xz
 
