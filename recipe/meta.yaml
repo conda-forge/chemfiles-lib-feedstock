@@ -1,7 +1,14 @@
+{% set CHFL_CONFIG = "-DCHFL_SYSTEM_NETCDF=OFF -DCHFL_SYSTEM_LZMA=ON -DCHFL_SYSTEM_BZIP2=ON" %}
+{% set CMAKE_COMPILERS = "-DCMAKE_C_COMPILER=cl.exe -DCMAKE_CXX_COMPILER=cl.exe" %}  # [win]
+{% set CMAKE_CONFIG = "-DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=ON" %}
+{% set CMAKE_INSTALL_PREFIX = "-DCMAKE_INSTALL_PREFIX=$PREFIX" %}  # [not win]
+{% set CMAKE_INSTALL_PREFIX = "-DCMAKE_INSTALL_PREFIX=%PREFIX%/Library" %}  # [win]
+{% set EXTRA_FLAGS = "-DCMAKE_CXX_FLAGS=-MD -DCMAKE_C_FLAGS=-MD" %}  # [win]
+{% set TESTS_PATH = "export DYLD_FALLBACK_LIBRARY_PATH=$(dirname $CLANG)/../lib" %}  # [osx]
 # Chemfiles version and SHA256
-{% set version = "0.10.2" %}
+{% set version = "0.10.3" %}
 {% set prerelease = "" %}
-{% set sha256 = "2e3b58167f25d561ab19ae06acdc02f26b5640bd6c85e0a5b10fedfec59f5285" %}
+{% set sha256 = "8be5dc48c31a193d93ffe9fc7d0a785fc912427739b94dfee658827c497a7d53" %}
 
 # Chemfiles test data git version and SHA256
 {% set data_git = "2db410d1f7651776e142676d26ec0d2cccd7b3cd" %}
@@ -37,7 +44,7 @@ source:
 
 build:
   skip: true  # [win and vc<14]
-  number: 2
+  number: 0
   script: |
     cmake -G Ninja {{ CMAKE_COMPILERS }} {{ EXTRA_FLAGS }} {{ CMAKE_CONFIG }} {{ CHFL_CONFIG }} {{ CMAKE_INSTALL_PREFIX }} .
     cmake  .
