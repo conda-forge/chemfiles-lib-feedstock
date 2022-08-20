@@ -11,7 +11,7 @@ Summary: Modern library for chemistry file reading and writing
 
 Development: https://github.com/chemfiles/chemfiles
 
-Documentation: https://chemfiles.org/chemfiles/0.10.2/
+Documentation: https://chemfiles.org/chemfiles/0.10.3/
 
 Current build status
 ====================
