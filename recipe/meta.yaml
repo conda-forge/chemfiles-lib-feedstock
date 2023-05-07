@@ -1,11 +1,7 @@
 # Chemfiles version and SHA256
-{% set version = "0.10.3" %}
+{% set version = "0.10.4" %}
 {% set prerelease = "" %}
-{% set sha256 = "5f53d87a668a85bebf04e0e8ace0f1db984573de1c54891ba7d37d31cced0408" %}
-
-# Chemfiles test data git version and SHA256
-{% set data_git = "66aba97578dc8f0b8e3fbfd005f9e07daa95476c" %}
-{% set data_sha256 = "d9060067217eff2d8ab1fc7d218fcdc6f72b34c00210d548cc7513fbf7fe25d6" %}
+{% set sha256 = "b8232ddaae2953538274982838aa6c2df87d300f7e2f80e92c171581e06325ba" %}
 
 {% set CMAKE_INSTALL_PREFIX = "-DCMAKE_INSTALL_PREFIX=$PREFIX" %}  # [not win]
 {% set CMAKE_INSTALL_PREFIX = "-DCMAKE_INSTALL_PREFIX=%PREFIX%/Library" %}  # [win]
@@ -17,7 +13,7 @@
 # Remove -GL from CXXFLAGS as this takes too much time and memory
 {% set EXTRA_FLAGS = "-DCMAKE_CXX_FLAGS=-MD -DCMAKE_C_FLAGS=-MD" %}  # [win]
 
-{% set CHFL_CONFIG = "-DCHFL_SYSTEM_NETCDF=OFF -DCHFL_SYSTEM_LZMA=ON -DCHFL_SYSTEM_BZIP2=ON" %}
+{% set CHFL_CONFIG = "-DCHFL_SYSTEM_LZMA=ON -DCHFL_SYSTEM_BZIP2=ON" %}
 {% set CMAKE_CONFIG = "-DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=ON" %}
 
 package:
@@ -28,12 +24,9 @@ source:
   - fn: chemfiles-{{ version }}{{ prerelease }}.tar.gz
     url: https://github.com/chemfiles/chemfiles/archive/{{ version }}{{ prerelease }}.tar.gz
     sha256: {{ sha256 }}
-  - url: https://github.com/chemfiles/tests-data/archive/{{ data_git }}.tar.gz
-    sha256: {{ data_sha256 }}
-    folder: tests/data
 
 build:
-  number: 1
+  number: 0
   script: |
     cmake -G Ninja {{ CMAKE_COMPILERS }} {{ EXTRA_FLAGS }} {{ CMAKE_CONFIG }} {{ CHFL_CONFIG }} {{ CMAKE_INSTALL_PREFIX }} .
     cmake  .
