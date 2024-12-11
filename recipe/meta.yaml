@@ -26,7 +26,7 @@ source:
     sha256: {{ sha256 }}
 
 build:
-  number: 0
+  number: 1
   script: |
     cmake -G Ninja {{ CMAKE_COMPILERS }} {{ EXTRA_FLAGS }} {{ CMAKE_CONFIG }} {{ CHFL_CONFIG }} {{ CMAKE_INSTALL_PREFIX }} .
     cmake  .
@@ -37,14 +37,15 @@ requirements:
     - cmake
     - ninja
     - {{ compiler('c') }}
+    - {{ stdlib("c") }}
     - {{ compiler('cxx') }}
   host:
     - bzip2
-    - xz
+    - liblzma-devel
   run:
     - libcxx >=8  # [osx]
     - bzip2
-    - xz
+    - liblzma-devel
 
 test:
   commands:
