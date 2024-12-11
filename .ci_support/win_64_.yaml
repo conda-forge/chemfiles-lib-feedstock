@@ -2,13 +2,15 @@ bzip2:
 - '1'
 c_compiler:
 - vs2019
+c_stdlib:
+- vs
 channel_sources:
 - conda-forge
 channel_targets:
 - conda-forge main
 cxx_compiler:
 - vs2019
+liblzma_devel:
+- '5'
 target_platform:
 - win-64
-xz:
-- '5'
