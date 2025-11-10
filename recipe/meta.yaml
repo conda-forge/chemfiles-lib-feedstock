@@ -42,10 +42,6 @@ requirements:
   host:
     - bzip2
     - liblzma-devel
-  run:
-    - libcxx >=8  # [osx]
-    - bzip2
-    - liblzma-devel
 
 test:
   commands:
